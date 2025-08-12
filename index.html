@@ -1,0 +1,494 @@
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #F0F7FF;
+    height: 100vh;
+}
+
+.chat-container {
+    max-width: 600px;
+    margin: 0 auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background-color: #1473E6;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.message {
+    max-width: 80%;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 15px;
+    animation: fadeIn 0.5s ease-in;
+    line-height: 1.5;
+}
+
+.menu-cards-container {
+    display: flex;
+    overflow-x: auto;
+    padding: 20px 10px;
+    gap: 20px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #1473E6 #F0F7FF;
+    position: relative;
+    margin: 0 -10px;
+}
+
+.menu-cards-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.menu-cards-container::-webkit-scrollbar-track {
+    background: #F0F7FF;
+    border-radius: 4px;
+}
+
+.menu-cards-container::-webkit-scrollbar-thumb {
+    background: #1473E6;
+    border-radius: 4px;
+}
+
+.menu-card {
+    flex: 0 0 250px;
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.menu-card:hover {
+    transform: translateY(-5px);
+}
+
+.menu-card svg {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background: #f8f9fa;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 5px 0;
+}
+
+.tag {
+    background: #e9ecef;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: #495057;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.quantity-btn {
+    background: #1473E6;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.bot-message {
+    background-color: white;
+    color: #333;
+    align-self: flex-start;
+    margin-right: auto;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.user-message {
+    background-color: #1473E6;
+    color: white;
+    margin-left: auto;
+    align-self: flex-end;
+}
+
+.options-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.option-button {
+    background-color: white;
+    border: 1px solid #1473E6;
+    color: #1473E6;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.option-button:hover {
+    background-color: #1473E6;
+    color: white;
+}
+
+.input-container {
+    padding: 20px;
+    background-color: white;
+    border-top: 1px solid #ddd;
+    display: flex;
+    gap: 10px;
+}
+
+#message-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 16px;
+}
+
+#send-button {
+    background-color: #1473E6;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+#send-button:hover {
+    background-color: #0D5BBD;
+}
+
+.typing-indicator {
+    background-color: #E6E7ED;
+    padding: 15px;
+    border-radius: 15px;
+    display: inline-block;
+    margin: 10px 0;
+    animation: pulse 1.5s infinite;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background: #8B8E98;
+    display: inline-block;
+    margin: 0 2px;
+    border-radius: 50%;
+    animation: bounce 1.5s infinite;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pulse {
+    50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+</style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="header">Health-Conscious Food Assistant</div>
+    <div class="messages" id="messages"></div>
+    <div class="input-container">
+        <input type="text" id="message-input" placeholder="Type your message here...">
+        <button id="send-button">Send</button>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    const menuItems = {
+        'quinoa bowl': {
+            price: 12.99, 
+            calories: 450, 
+            tags: ['vegetarian', 'high-protein'],
+            svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#f3e5d8"/><circle cx="50" cy="50" r="35" fill="#e6c9a8"/><circle cx="50" cy="50" r="25" fill="#6aa84f"/></svg>'
+        },
+        'grilled chicken salad': {
+            price: 11.99, 
+            calories: 380, 
+            tags: ['high-protein', 'low-carb'],
+            svg: '<svg viewBox="0 0 100 100"><rect x="10" y="20" width="80" height="60" fill="#90EE90"/><circle cx="50" cy="50" r="20" fill="#F5DEB3"/></svg>'
+        },
+        'veggie burger': {
+            price: 10.99, 
+            calories: 420, 
+            tags: ['vegetarian', 'plant-based'],
+            svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#CD853F"/><rect x="20" y="45" width="60" height="10" fill="#90EE90"/></svg>'
+        },
+        'salmon poke bowl': {
+            price: 15.99, 
+            calories: 520, 
+            tags: ['high-protein', 'omega-3'],
+            svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#f3e5d8"/><path d="M30,50 Q50,30 70,50" fill="#FF6B6B" stroke="#FF6B6B" stroke-width="2"/></svg>'
+        },
+        'mediterranean wrap': {
+            price: 9.99, 
+            calories: 440, 
+            tags: ['vegetarian'],
+            svg: '<svg viewBox="0 0 100 100"><path d="M10,40 Q50,20 90,40 Q50,60 10,40" fill="#F5DEB3"/><circle cx="50" cy="40" r="5" fill="#90EE90"/></svg>'
+        },
+        'acai smoothie bowl': {
+            price: 11.99,
+            calories: 380,
+            tags: ['vegan', 'antioxidants'],
+            svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#8B008B"/><circle cx="40" cy="40" r="5" fill="#FFF"/><circle cx="60" cy="40" r="5" fill="#FFF"/></svg>'
+        },
+        'tofu stir-fry': {
+            price: 13.99,
+            calories: 410,
+            tags: ['vegan', 'high-protein'],
+            svg: '<svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" fill="#FFE4B5"/><path d="M30,50 Q50,20 70,50" stroke="#90EE90" stroke-width="4" fill="none"/></svg>'
+        },
+        'keto power bowl': {
+            price: 14.99,
+            calories: 560,
+            tags: ['keto', 'low-carb'],
+            svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#F0F8FF"/><rect x="30" y="30" width="40" height="40" fill="#FF6B6B"/></svg>'
+        },
+        'green goddess salad': {
+            price: 12.99,
+            calories: 320,
+            tags: ['vegetarian', 'low-calorie'],
+            svg: '<svg viewBox="0 0 100 100"><rect x="10" y="20" width="80" height="60" fill="#90EE90"/><path d="M20,50 Q50,20 80,50" stroke="#32CD32" stroke-width="4" fill="none"/></svg>'
+        },
+        'protein power plate': {
+            price: 16.99,
+            calories: 620,
+            tags: ['high-protein', 'gluten-free'],
+            svg: '<svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" fill="#DEB887"/><circle cx="50" cy="50" r="20" fill="#B8860B"/></svg>'
+        }
+    };
+
+    let order = {};
+    let conversationState = 'greeting';
+    let userPreferences = {};
+
+    function createMenuCards() {
+        const cardsContainer = $('<div></div>').addClass('menu-cards-container');
+        
+        Object.entries(menuItems).forEach(([item, details]) => {
+            const tagsHtml = details.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+            const card = $('<div></div>').addClass('menu-card');
+            card.html(`
+                ${details.svg}
+                <h3>${item}</h3>
+                <p>$${details.price}</p>
+                <p>${details.calories} calories</p>
+                <div class="tags-container">${tagsHtml}</div>
+                <div class="quantity-control">
+                    <button class="quantity-btn minus" data-item="${item}">-</button>
+                    <span class="quantity" data-item="${item}">0</span>
+                    <button class="quantity-btn plus" data-item="${item}">+</button>
+                </div>
+            `);
+            cardsContainer.append(card);
+        });
+
+        return cardsContainer;
+    }
+
+    function addMessage(text, isBot, options = []) {
+        if (isBot) {
+            const typingIndicator = $('<div class="typing-indicator"><span></span><span></span><span></span></div>');
+            $('#messages').append(typingIndicator);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            
+            setTimeout(() => {
+                typingIndicator.remove();
+                const messageDiv = $('<div></div>')
+                    .addClass('message')
+                    .addClass('bot-message')
+                    .text(text);
+                $('#messages').append(messageDiv);
+
+                if (options.length > 0) {
+                    const optionsContainer = $('<div></div>').addClass('options-container');
+                    options.forEach(option => {
+                        const button = $('<button></button>')
+                            .addClass('option-button')
+                            .text(option)
+                            .click(() => processUserInput(option));
+                        optionsContainer.append(button);
+                    });
+                    $('#messages').append(optionsContainer);
+                }
+                
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            }, 1500);
+        } else {
+            const messageDiv = $('<div></div>')
+                .addClass('message')
+                .addClass('user-message')
+                .text(text);
+            $('#messages').append(messageDiv);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+        }
+    }
+
+    function processUserInput(input) {
+        const lowercaseInput = input.toLowerCase();
+        let botResponse = '';
+        let options = [];
+
+        switch(conversationState) {
+            case 'greeting':
+                if (lowercaseInput.includes('hello') || lowercaseInput.includes('hi')) {
+                    botResponse = "Welcome! I'm here to help you find the perfect healthy meal. Do you have any dietary preferences or restrictions I should know about?";
+                    options = ['Vegetarian', 'Vegan', 'No restrictions', 'Gluten-free'];
+                    conversationState = 'dietary_preferences';
+                } else if (lowercaseInput.includes('menu')) {
+                    botResponse = "I'd be happy to show you our menu, but first, may I ask about any dietary preferences? This will help me make better recommendations.";
+                    options = ['Vegetarian', 'Vegan', 'No restrictions', 'Gluten-free'];
+                    conversationState = 'dietary_preferences';
+                } else {
+                    botResponse = "Hello! To help you better, could you tell me if you have any dietary preferences?";
+                    options = ['Vegetarian', 'Vegan', 'No restrictions', 'Gluten-free'];
+                    conversationState = 'dietary_preferences';
+                }
+                break;
+
+            case 'dietary_preferences':
+                userPreferences.diet = lowercaseInput;
+                botResponse = `Perfect! Based on your ${lowercaseInput} preference, here are our recommended menu items. You can adjust quantities using the + and - buttons:`;
+                $('#messages').append(createMenuCards());
+                options = ['I\'m ready to order', 'Tell me more about the dishes'];
+                conversationState = 'ordering';
+                break;
+
+            case 'ordering':
+                if (lowercaseInput.includes('ready') || lowercaseInput.includes('complete') || lowercaseInput.includes('checkout')) {
+                    const orderItems = Object.entries(order).filter(([_, quantity]) => quantity > 0);
+                    
+                    if (orderItems.length === 0) {
+                        botResponse = "I notice you haven't selected any items yet. Would you like me to explain our menu options?";
+                        options = ['Yes, tell me more', 'Show menu again'];
+                    } else {
+                        let total = 0;
+                        let orderSummary = "Here's your order summary:\n\n";
+                        orderItems.forEach(([item, quantity]) => {
+                            const itemTotal = menuItems[item].price * quantity;
+                            total += itemTotal;
+                            orderSummary += `${quantity}x ${item} ($${itemTotal.toFixed(2)})\n`;
+                        });
+                        orderSummary += `\nTotal: $${total.toFixed(2)}`;
+                        botResponse = orderSummary + "\n\nWould you like to confirm this order?";
+                        options = ['Confirm Order', 'Modify Order', 'Start Over'];
+                        conversationState = 'confirmation';
+                    }
+                } else if (lowercaseInput.includes('more')) {
+                    botResponse = "Each of our dishes is carefully crafted with fresh, nutritious ingredients. What would you like to know more about?";
+                    options = Object.keys(menuItems);
+                } else {
+                    botResponse = "You can select items and adjust quantities using the + and - buttons. Let me know when you're ready to complete your order!";
+                    options = ['Complete Order', 'Tell me more about the dishes'];
+                }
+                break;
+
+            case 'confirmation':
+                if (lowercaseInput.includes('confirm')) {
+                    botResponse = "Great! Your order has been confirmed and will be ready in approximately 30 minutes. Would you like a receipt sent to your phone?";
+                    options = ['Yes, send receipt', 'No, thanks'];
+                    order = {};
+                    conversationState = 'final';
+                } else if (lowercaseInput.includes('modify')) {
+                    botResponse = "Sure, you can modify your order. Just adjust the quantities using the + and - buttons:";
+                    $('#messages').append(createMenuCards());
+                    conversationState = 'ordering';
+                } else if (lowercaseInput.includes('start')) {
+                    order = {};
+                    conversationState = 'greeting';
+                    botResponse = "Let's start over! Do you have any dietary preferences?";
+                    options = ['Vegetarian', 'Vegan', 'No restrictions', 'Gluten-free'];
+                }
+                break;
+
+            case 'final':
+                botResponse = "Thank you for ordering with us! Is there anything else I can help you with?";
+                options = ['Start New Order', 'No, thanks'];
+                conversationState = 'greeting';
+                break;
+        }
+
+        addMessage(input, false);
+        setTimeout(() => addMessage(botResponse, true, options), 500);
+    }
+
+    $(document).on('click', '.quantity-btn', function() {
+        const item = $(this).data('item');
+        const isPlus = $(this).hasClass('plus');
+        order[item] = order[item] || 0;
+        
+        if (isPlus) {
+            order[item]++;
+        } else if (order[item] > 0) {
+            order[item]--;
+        }
+        
+        $(`.quantity[data-item="${item}"]`).text(order[item]);
+    });
+
+    addMessage("Hello! I'm your health-conscious food assistant. How can I help you today?", true, ['Hello!', 'Show me the menu']);
+
+    $('#send-button').click(function() {
+        const input = $('#message-input').val().trim();
+        if (input) {
+            processUserInput(input);
+            $('#message-input').val('');
+        }
+    });
+
+    $('#message-input').keypress(function(e) {
+        if (e.which == 13) {
+            const input = $(this).val().trim();
+            if (input) {
+                processUserInput(input);
+                $(this).val('');
+            }
+        }
+    });
+});
+</script>
+</body></html>
